@@ -1,4 +1,4 @@
-# KCK---Zliczanie-oczek
+# KCK - Zliczanie oczek
 ## Autorzy:
 Julia Lamperska \
 Mateusz Świercz
