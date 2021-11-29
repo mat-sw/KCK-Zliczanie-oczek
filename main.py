@@ -1,11 +1,14 @@
 from skimage import img_as_float, feature, morphology, filters, img_as_ubyte
 import skimage.io as io
+from skimage.morphology import square, closing
+from skimage.filters import threshold_yen, threshold_isodata, sobel
 from matplotlib import pyplot as plt
 from matplotlib.pyplot import imshow, figure, subplot
 import os
 import numpy as np
+from scipy import ndimage as ndi
 
-imgs = []
+imgs = ["20211121_194435.jpg", "20211121_194320.jpg", "1637665348988.jpg", "1637665349106.jpg"]
 
 def show_gray(img):
     imshow(img, cmap='gray')
@@ -20,26 +23,21 @@ def plot_hist(img):
 if __name__ == '__main__':
     print("Goodbye World :/")
 
-    # filepath = ".\\images"
     for file in os.listdir(".\\images"):
-        image = io.imread("images\\"+file, as_gray='true')
-        # image = feature.canny(image, sigma=2)
-        figure()
-        # image = (image > 50) * 255
-        # image = np.uint8(image)
-        subplot(2,2,1)
-        show_gray(image)
-        subplot(2,2,2)
-        plot_hist(image)
-        # plt.show()
-        MIN = 45 / 255
-        MAX = 150 / 255
-        # nie wiem czy chcemy sie bawic w takie wycinanie kolorow, spojrz image-processing.html to jest normalizacja -> In[23]
-        norm = (image - MIN) / (MAX - MIN)
-        norm[norm > 1] = 1
-        norm[norm < 0] = 0
-        subplot(2,2,3)
-        show_gray(norm)
-        subplot(2,2,4)
-        plot_hist(norm)
+    #     pass
+    # for img in imgs:
+        image = img_as_float(io.imread("images\\"+file, as_gray=True))
+        # image = img_as_float(io.imread("images\\"+img, as_gray=True))
+        prog1 = threshold_isodata(image)
+        prog2 = threshold_yen(image)
+
+        binary_isodata = closing(image > prog1, square(3))
+        binary_yen = closing(image > prog2)
+
+        binary = np.logical_or(binary_yen, binary_isodata)
+        # fill = ndi.binary_closing(binary)
+        # fill = ndi.binary_fill_holes(fill)
+        eroded = morphology.erosion(binary, square(13))
+        clean = morphology.remove_small_objects(eroded, 500)
+        show_gray(clean)
         plt.show()
