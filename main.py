@@ -10,8 +10,10 @@ from scipy import ndimage as ndi
 
 imgs = ["20211121_194435.jpg", "20211121_194320.jpg", "1637665348988.jpg", "1637665349106.jpg"]
 
+
 def show_gray(img):
     imshow(img, cmap='gray')
+
 
 def plot_hist(img):
     img = img_as_ubyte(img)
@@ -24,7 +26,7 @@ if __name__ == '__main__':
     print("Goodbye World :/")
 
     for file in os.listdir(".\\images"):
-    #     pass
+        # pass
     # for img in imgs:
         image = img_as_float(io.imread("images\\"+file, as_gray=True))
         # image = img_as_float(io.imread("images\\"+img, as_gray=True))
@@ -41,3 +43,4 @@ if __name__ == '__main__':
         clean = morphology.remove_small_objects(eroded, 500)
         show_gray(clean)
         plt.show()
+        
