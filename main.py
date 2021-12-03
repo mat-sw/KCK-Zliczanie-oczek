@@ -8,7 +8,6 @@ import os
 import numpy as np
 from scipy import ndimage as ndi
 import cv2 as cv
-from PIL import Image
 
 imgs = ["20211121_194435.jpg", "20211121_194320.jpg", "1637665348988.jpg", "1637665349106.jpg"]
 
@@ -34,44 +33,54 @@ if __name__ == '__main__':
     print("Goodbye World :/")
 
     for file in os.listdir(".\\images"):
-        # pass
-    # for img in imgs:
-    #     image = img_as_float(io.imread("images\\"+file, as_gray=True))
-    #     # image = img_as_float(io.imread("images\\"+img, as_gray=True))
-    #     prog1 = threshold_isodata(image)
-    #     prog2 = threshold_yen(image)
-    #
-    #     binary_isodata = closing(image > prog1, square(3))
-    #     binary_yen = closing(image > prog2)
-    #
-    #     binary = np.logical_or(binary_yen, binary_isodata)
-    #     # fill = ndi.binary_closing(binary)
-    #     # fill = ndi.binary_fill_holes(fill)
-    #     eroded = morphology.erosion(binary, square(13))
-    #     clean = morphology.remove_small_objects(eroded, 2000)
-    #     plt.imsave("imagescv\\"+file, clean)
+        image = img_as_float(io.imread("images\\"+file, as_gray=True))
 
-        img = cv.imread("images\\"+file)
-        img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
-        cimg = img.copy()
-        # converting image into grayscale image
-        gray = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
-        img = cv.medianBlur(gray, 5)
-        circles = cv.HoughCircles(image=img, method=cv.HOUGH_GRADIENT, dp=0.9,
-                                   minDist=80, param1=110, param2=39, maxRadius=70)
+        prog1 = threshold_isodata(image)
+        prog2 = threshold_yen(image)
 
-        for co, i in enumerate(circles[0, :], start=1):
-            # draw the outer circle in green
-            cv.circle(cimg,(i[0],i[1]),i[2],(0,255,0),2)
-            # draw the center of the circle in red
-            cv.circle(cimg,(i[0],i[1]),2,(0,0,255),3)
+        binary_isodata = closing(image > prog1, square(3))
+        binary_yen = closing(image > prog2)
+
+        binary = np.logical_or(binary_yen, binary_isodata)
+        # fill = ndi.binary_closing(binary)
+        # fill = ndi.binary_fill_holes(fill)
+        eroded = morphology.erosion(binary, square(13))
+        clean = morphology.remove_small_objects(eroded, 2000)
+        plt.imsave("imagescv\\"+file, clean)
+
+
+        img = cv.imread("imagescv\\"+file)
+
+        img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+        # cimg = img.copy()
+        img = cv.medianBlur(img, 5)
+
+        circles = cv.HoughCircles(img, cv.HOUGH_GRADIENT, 1, 20,
+                                  param1=30, param2=15, minRadius=0, maxRadius=100)
+        circles = np.uint16(np.around(circles))
+
+        counter = 0;
+
+        # print(circles)
+
+        for i in circles[0, :]:
+            counter = counter + 1;
+            # draw the outer circle
+            cv.circle(img, (i[0], i[1]), i[2], (0, 255, 0), 2)
+            # draw the center of the circle
+            cv.circle(img, (i[0], i[1]), 2, (0, 0, 255), 3)
+
+        print(counter)
+
+        # cv.imshow('detected circles', img)
+        cv.waitKey(0)
+        cv.destroyAllWindows()
 
         plt.imshow(img)
         plt.show()
+
         # img = cv.resize(img, (960, 640))
         # cv.imshow('shapes', img)
         # # print(len(approx))
-        # cv.waitKey(0)
-        # cv.destroyAllWindows()
         # show_gray(clean)
         # plt.show()
