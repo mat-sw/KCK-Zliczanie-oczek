@@ -1,13 +1,15 @@
-from skimage import img_as_float, feature, morphology, filters, img_as_ubyte
+from skimage import img_as_float, feature, morphology, img_as_ubyte, img_as_int
 import skimage.io as io
 from skimage.morphology import square, closing
-from skimage.filters import threshold_yen, threshold_isodata, sobel
+from skimage.filters import threshold_yen, threshold_isodata
+from skimage.restoration import denoise_bilateral
 from matplotlib import pyplot as plt
 from matplotlib.pyplot import imshow, figure, subplot
 import os
 import numpy as np
 from scipy import ndimage as ndi
 import cv2 as cv
+from PIL import Image
 
 imgs = ["20211121_194435.jpg", "20211121_194320.jpg", "1637665348988.jpg", "1637665349106.jpg"]
 
@@ -45,52 +47,66 @@ if __name__ == '__main__':
     #     show_gray(clean)
     #     plt.show()
 
-    for file in os.listdir(".\\images"):
-        image = img_as_float(io.imread("images\\"+file, as_gray=True))
+    for file in os.listdir(".\\kck_compressed"):
+        image = img_as_float(io.imread("kck_compressed\\"+file, as_gray=True))
 
-        # prog1 = threshold_isodata(image)
-        prog2 = threshold_yen(image)
+        denoised = denoise_bilateral(image)
+        prog = threshold_yen(denoised)
+        binary = closing(image > (prog*1.32))
 
-        # binary_isodata = closing(image > prog1, square(3))
-        binary = closing(image > prog2)
-
-        # binary = np.logical_or(binary_yen, binary_isodata)
-        # fill = ndi.binary_closing(binary)
-        # fill = ndi.binary_fill_holes(fill)
-        # eroded1 = morphology.erosion(binary, square(10))
-        eroded = morphology.erosion(binary, square(25))
+        clean0 = morphology.remove_small_objects(binary, 10)
+        clean50 = morphology.remove_small_objects(clean0, 50)
+        clean100 = morphology.remove_small_objects(clean50, 100)
+        eroded = morphology.erosion(clean100, square(15))
         fill = ndi.binary_closing(eroded)
-        # dilated = morphology.dilation(eroded, square(10))
-        clean = morphology.remove_small_objects(fill, 100)
-        plt.imsave("imagescv\\"+file, clean)
+        fill = (255-fill)
+        # figure(figsize=(8, 6))
+        # subplot(1,2,1)
+        plt.imsave("imagescv\\"+file, fill)
 
+        img = cv.imread("imagescv\\"+file, 0)
+        img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
 
-        img = cv.imread("imagescv\\"+file)
+        # Setup SimpleBlobDetector parameters.
+        params = cv.SimpleBlobDetector_Params()
+        # Change thresholds
+        params.minThreshold = 100
+        params.maxThreshold = 150
 
-        img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-        # cimg = img.copy()
-        img = cv.medianBlur(img, 5)
+        # Filter by Area.
+        # params.filterByArea = True
+        # params.minArea = 50
+        # params.maxArea = 200
 
-        circles = cv.HoughCircles(img, cv.HOUGH_GRADIENT, 1, 20,
-                                  param1=30, param2=15, minRadius=50, maxRadius=130)
-        circles = np.uint16(np.around(circles))
+        # Filter by Circularity
+        params.filterByCircularity = True
+        params.minCircularity = 0.8
+        params.maxCircularity = 1
+        # # Filter by Convexity
+        params.filterByConvexity = True
+        params.minConvexity = 0.75
+        params.maxConvexity = 1
 
-        counter = 0
+        # Filter by Inertio
+        # params.filterByInertia = True
+        # params.minInertiaRatio = 0.01
 
-        # print(circles)
+        # Create a detector with the parameters
+        # detector = cv.SimpleBlobDetector_create(params)
+        ver = (cv.__version__).split('.')
+        if int(ver[0]) < 3 :
+            detector = cv.SimpleBlobDetector(params)
+        else :
+            detector = cv.SimpleBlobDetector_create(params)
 
-        for i in circles[0, :]:
-            counter = counter + 1
-            # draw the outer circle
-            cv.circle(img, (i[0], i[1]), i[2], (0, 0, 0), 2)
-            # draw the center of the circle
-            cv.circle(img, (i[0], i[1]), 2, (0, 0, 255), 3)
-
-        print(counter)
-
-        plt.imshow(img)
+        # Detect blobs.
+        blobs = detector.detect(img)
+        img_with_blobs = cv.drawKeypoints(img, blobs, np.array([]), (0,0,0),
+                                         cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+        print(blobs.BLOB_LABEL_COUNT)
+        imshow(img_with_blobs)
         plt.show()
-
-        # # print(len(approx))
-        # show_gray(clean)
-        # plt.show()
+        # figure(figsize=(8, 6))
+        # subplot(1,2,1)
+        # subplot(1,2,2)
+        # plot_hist(img)
