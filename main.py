@@ -31,21 +31,37 @@ def plot_hist(img):
 
 if __name__ == '__main__':
     print("Goodbye World :/")
+    # for img in imgs:
+    #     image = img_as_float(io.imread("images\\"+img, as_gray=True))
+    #     # prog1 = threshold_isodata(image)
+    #     prog2 = threshold_yen(image)
+    #
+    #     # binary_isodata = closing(image > prog1, square(3))
+    #     binary = closing(image > prog2)
+    #
+    #     # binary = np.logical_or(binary_yen, binary_isodata)
+    #     eroded = morphology.erosion(binary, square(8))
+    #     clean = morphology.remove_small_objects(eroded, 100)
+    #     show_gray(clean)
+    #     plt.show()
 
     for file in os.listdir(".\\images"):
         image = img_as_float(io.imread("images\\"+file, as_gray=True))
 
-        prog1 = threshold_isodata(image)
+        # prog1 = threshold_isodata(image)
         prog2 = threshold_yen(image)
 
-        binary_isodata = closing(image > prog1, square(3))
-        binary_yen = closing(image > prog2)
+        # binary_isodata = closing(image > prog1, square(3))
+        binary = closing(image > prog2)
 
-        binary = np.logical_or(binary_yen, binary_isodata)
+        # binary = np.logical_or(binary_yen, binary_isodata)
         # fill = ndi.binary_closing(binary)
         # fill = ndi.binary_fill_holes(fill)
-        eroded = morphology.erosion(binary, square(13))
-        clean = morphology.remove_small_objects(eroded, 2000)
+        # eroded1 = morphology.erosion(binary, square(10))
+        eroded = morphology.erosion(binary, square(25))
+        fill = ndi.binary_closing(eroded)
+        # dilated = morphology.dilation(eroded, square(10))
+        clean = morphology.remove_small_objects(fill, 100)
         plt.imsave("imagescv\\"+file, clean)
 
 
@@ -56,31 +72,25 @@ if __name__ == '__main__':
         img = cv.medianBlur(img, 5)
 
         circles = cv.HoughCircles(img, cv.HOUGH_GRADIENT, 1, 20,
-                                  param1=30, param2=15, minRadius=0, maxRadius=100)
+                                  param1=30, param2=15, minRadius=50, maxRadius=130)
         circles = np.uint16(np.around(circles))
 
-        counter = 0;
+        counter = 0
 
         # print(circles)
 
         for i in circles[0, :]:
-            counter = counter + 1;
+            counter = counter + 1
             # draw the outer circle
-            cv.circle(img, (i[0], i[1]), i[2], (0, 255, 0), 2)
+            cv.circle(img, (i[0], i[1]), i[2], (0, 0, 0), 2)
             # draw the center of the circle
             cv.circle(img, (i[0], i[1]), 2, (0, 0, 255), 3)
 
         print(counter)
 
-        # cv.imshow('detected circles', img)
-        cv.waitKey(0)
-        cv.destroyAllWindows()
-
         plt.imshow(img)
         plt.show()
 
-        # img = cv.resize(img, (960, 640))
-        # cv.imshow('shapes', img)
         # # print(len(approx))
         # show_gray(clean)
         # plt.show()
