@@ -1,7 +1,7 @@
-from skimage import img_as_float, feature, morphology, img_as_ubyte, img_as_int
+from skimage import img_as_float, morphology
 import skimage.io as io
 from skimage.morphology import square, closing
-from skimage.filters import threshold_yen, threshold_isodata
+from skimage.filters import threshold_yen
 from skimage.restoration import denoise_bilateral
 from matplotlib import pyplot as plt
 from matplotlib.pyplot import imshow, figure, subplot
@@ -9,31 +9,13 @@ import os
 import numpy as np
 from scipy import ndimage as ndi
 import cv2 as cv
-from PIL import Image
 
-imgs = ["20211121_194435.jpg", "20211121_194320.jpg", "1637665348988.jpg", "1637665349106.jpg"]
-
-
-def show_gray(img):
-    imshow(img, cmap='gray')
-
-def rgb2gray(rgb):
-
-    r, g, b = rgb[:,:,0], rgb[:,:,1], rgb[:,:,2]
-    gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
-
-    return gray
-
-def plot_hist(img):
-    img = img_as_ubyte(img)
-    histo, x = np.histogram(img, range(0, 255), density=True)
-    plt.plot(histo)
-    plt.xlim(0, 255)
+imgs = ["1637665348775", "1637665348725", "1637665348825", "20211206_133805"]
 
 
 if __name__ == '__main__':
     print("Goodbye World :/")
-    # for img in imgs:
+    # for file in imgs:
     #     image = img_as_float(io.imread("images\\"+img, as_gray=True))
     #     # prog1 = threshold_isodata(image)
     #     prog2 = threshold_yen(image)
@@ -47,19 +29,19 @@ if __name__ == '__main__':
     #     show_gray(clean)
     #     plt.show()
 
-    for file in os.listdir(".\\kck_compressed"):
-        image = img_as_float(io.imread("kck_compressed\\"+file, as_gray=True))
+    for file in os.listdir(".\\images"):
+        image = img_as_float(io.imread("images\\"+file, as_gray=True))
 
         denoised = denoise_bilateral(image)
         prog = threshold_yen(denoised)
-        binary = closing(image > (prog*1.32))
+        binary = closing(image > (prog*1.3))
 
         clean0 = morphology.remove_small_objects(binary, 10)
         clean50 = morphology.remove_small_objects(clean0, 50)
         clean100 = morphology.remove_small_objects(clean50, 100)
-        eroded = morphology.erosion(clean100, square(15))
+        eroded = morphology.erosion(clean100, square(12))
         fill = ndi.binary_closing(eroded)
-        fill = (255-fill)
+        # fill = (255-fill)
         # figure(figsize=(8, 6))
         # subplot(1,2,1)
         plt.imsave("imagescv\\"+file, fill)
@@ -70,22 +52,25 @@ if __name__ == '__main__':
         # Setup SimpleBlobDetector parameters.
         params = cv.SimpleBlobDetector_Params()
         # Change thresholds
-        params.minThreshold = 100
-        params.maxThreshold = 150
+        # params.minThreshold = 100
+        # params.maxThreshold = 150
 
-        # Filter by Area.
-        # params.filterByArea = True
-        # params.minArea = 50
-        # params.maxArea = 200
+        # Filter by Area. Area of circle = PI*R^2
+        params.filterByArea = True
+        params.minArea = 1000
+        params.maxArea = 50000
 
         # Filter by Circularity
         params.filterByCircularity = True
-        params.minCircularity = 0.8
+        params.minCircularity = 0.75
         params.maxCircularity = 1
         # # Filter by Convexity
         params.filterByConvexity = True
-        params.minConvexity = 0.75
+        params.minConvexity = 0.6
         params.maxConvexity = 1
+
+        # params.filterByColor = True
+        # params.blobColor = 255
 
         # Filter by Inertio
         # params.filterByInertia = True
@@ -101,12 +86,9 @@ if __name__ == '__main__':
 
         # Detect blobs.
         blobs = detector.detect(img)
-        img_with_blobs = cv.drawKeypoints(img, blobs, np.array([]), (0,0,0),
+        img_with_blobs = cv.drawKeypoints(img, blobs, np.array([]), (0,255,255),
                                          cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-        print(blobs.BLOB_LABEL_COUNT)
-        imshow(img_with_blobs)
+        img = cv.bitwise_and(img,img_with_blobs)
+        print("{} : {}".format(file, len(blobs)))
+        imshow(img)
         plt.show()
-        # figure(figsize=(8, 6))
-        # subplot(1,2,1)
-        # subplot(1,2,2)
-        # plot_hist(img)
