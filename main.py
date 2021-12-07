@@ -10,8 +10,7 @@ import numpy as np
 from scipy import ndimage as ndi
 import cv2 as cv
 
-# imgs = ["1637665348775", "1637665348725", "1637665348825", "20211206_133805"]
-
+imgs = ["20211207_103246.jpg", "20211121_194323.jpg", "20211121_193341.jpg", "1637665348825.jpg", "20211206_132932.jpg"]
 
 if __name__ == '__main__':
     dict = {}
@@ -23,7 +22,8 @@ if __name__ == '__main__':
         dict[line1[0]] = int(line1[1])
     # print(dict)
 
-    for file in os.listdir(".\\images"):
+    for file in imgs:
+    # for file in os.listdir(".\\images"):
         image = img_as_float(io.imread("images\\"+file, as_gray=True))
 
         denoised = denoise_bilateral(image)
@@ -62,7 +62,7 @@ if __name__ == '__main__':
 
         # convexity
         params.filterByConvexity = True
-        params.minConvexity = 0.6
+        params.minConvexity = 0.8
         params.maxConvexity = 1
 
         # color
@@ -97,5 +97,8 @@ if __name__ == '__main__':
         print("{} : {}   {}".format(file, len(blobs), correctness))
         imshow(img)
         plt.show()
-    print("ok ", len(dobre))
-    print("zle ", len(zle))
+    print("--------------------------------")
+    print("PODSUMOWANIE")
+    print("DOBRZE:", len(dobre))
+    print("ZLE:", len(zle))
+    print("SKUTECZNOSC:", (len(dobre)/(len(dobre)+len(zle)))*100, "%")
