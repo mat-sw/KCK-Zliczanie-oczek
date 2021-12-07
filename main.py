@@ -4,31 +4,16 @@ from skimage.morphology import square, closing
 from skimage.filters import threshold_yen
 from skimage.restoration import denoise_bilateral
 from matplotlib import pyplot as plt
-from matplotlib.pyplot import imshow, figure, subplot
+from matplotlib.pyplot import imshow
 import os
 import numpy as np
 from scipy import ndimage as ndi
 import cv2 as cv
 
-imgs = ["1637665348775", "1637665348725", "1637665348825", "20211206_133805"]
+# imgs = ["1637665348775", "1637665348725", "1637665348825", "20211206_133805"]
 
 
 if __name__ == '__main__':
-    print("Goodbye World :/")
-    # for file in imgs:
-    #     image = img_as_float(io.imread("images\\"+img, as_gray=True))
-    #     # prog1 = threshold_isodata(image)
-    #     prog2 = threshold_yen(image)
-    #
-    #     # binary_isodata = closing(image > prog1, square(3))
-    #     binary = closing(image > prog2)
-    #
-    #     # binary = np.logical_or(binary_yen, binary_isodata)
-    #     eroded = morphology.erosion(binary, square(8))
-    #     clean = morphology.remove_small_objects(eroded, 100)
-    #     show_gray(clean)
-    #     plt.show()
-
     for file in os.listdir(".\\images"):
         image = img_as_float(io.imread("images\\"+file, as_gray=True))
 
@@ -49,42 +34,44 @@ if __name__ == '__main__':
         img = cv.imread("imagescv\\"+file, 0)
         img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
 
-        # Setup SimpleBlobDetector parameters.
+        # SimpleBlobDetector - PARAMETRY
         params = cv.SimpleBlobDetector_Params()
-        # Change thresholds
+
+        # threshold
         # params.minThreshold = 100
         # params.maxThreshold = 150
 
-        # Filter by Area. Area of circle = PI*R^2
+        # area
         params.filterByArea = True
         params.minArea = 1000
         params.maxArea = 50000
 
-        # Filter by Circularity
+        # circularity
         params.filterByCircularity = True
         params.minCircularity = 0.75
         params.maxCircularity = 1
-        # # Filter by Convexity
+
+        # convexity
         params.filterByConvexity = True
         params.minConvexity = 0.6
         params.maxConvexity = 1
 
+        # color
         # params.filterByColor = True
         # params.blobColor = 255
 
-        # Filter by Inertio
+        # interio
         # params.filterByInertia = True
         # params.minInertiaRatio = 0.01
 
-        # Create a detector with the parameters
-        # detector = cv.SimpleBlobDetector_create(params)
+        # detektor
         ver = (cv.__version__).split('.')
         if int(ver[0]) < 3 :
             detector = cv.SimpleBlobDetector(params)
         else :
             detector = cv.SimpleBlobDetector_create(params)
 
-        # Detect blobs.
+        # zliczanie
         blobs = detector.detect(img)
         img_with_blobs = cv.drawKeypoints(img, blobs, np.array([]), (0,255,255),
                                          cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
