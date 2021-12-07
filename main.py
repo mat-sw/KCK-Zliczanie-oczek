@@ -14,6 +14,15 @@ import cv2 as cv
 
 
 if __name__ == '__main__':
+    dict = {}
+    dobre = []
+    zle = []
+    f = open("lista.txt", "r")
+    for line in f:
+        line1 = line.split(" ")
+        dict[line1[0]] = int(line1[1])
+    # print(dict)
+
     for file in os.listdir(".\\images"):
         image = img_as_float(io.imread("images\\"+file, as_gray=True))
 
@@ -76,6 +85,17 @@ if __name__ == '__main__':
         img_with_blobs = cv.drawKeypoints(img, blobs, np.array([]), (0,255,255),
                                          cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
         img = cv.bitwise_and(img,img_with_blobs)
-        print("{} : {}".format(file, len(blobs)))
+
+        correctness = ""
+        if dict[file] == len(blobs):
+            dobre.append(file)
+            correctness = "+"
+        else:
+            zle.append(file)
+            correctness = "-"
+
+        print("{} : {}   {}".format(file, len(blobs), correctness))
         imshow(img)
         plt.show()
+    print("ok ", len(dobre))
+    print("zle ", len(zle))
